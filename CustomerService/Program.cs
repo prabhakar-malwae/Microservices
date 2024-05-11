@@ -7,24 +7,19 @@ var builder = WebApplication.CreateBuilder(args);
 
 var key = Encoding.ASCII.GetBytes("DbFCH///fLPOk4Yaw8hvmFueG3y4yvb8KW+jZaLMDOI="); // This should be a secret key stored in a secure location
 
-builder.Services.AddAuthentication(auth =>
-    {
-        auth.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        auth.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    }).AddJwtBearer(options =>
-    {
-        options.RequireHttpsMetadata = false;
-        options.SaveToken = true;
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            ValidateIssuer = false,
-            ValidateAudience = false
-        };
-    });
+ // Configure JWT authentication
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.Authority = "http://localhost:5014/"; // URL of the LoginService
+                    options.Audience = "customerservice"; // Expected audience value
+                    options.RequireHttpsMetadata = false;
+                });
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add(typeof(ValidateTokenAttribute));
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -32,6 +27,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 if (connectionString != null)
 {
     builder.Services.AddScoped(_ => new CustomerRepository(connectionString));
+    builder.Services.AddHttpClient();
 }
 
 var app = builder.Build();

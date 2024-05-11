@@ -1,18 +1,23 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection; 
 
 namespace Microservice
 {
-    [Authorize]
+    //[Authorize]
+   
     [ApiController]
     [Route("/api/customer")]
     public class CustomerController : ControllerBase
     {
         private readonly CustomerRepository _customerRepository;
+        
         public CustomerController(CustomerRepository customerRepository)
         {
             _customerRepository = customerRepository;
+            
         }
+    
         [HttpGet]
         public IActionResult GetCustomers()
         {

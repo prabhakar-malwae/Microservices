@@ -50,3 +50,4 @@ C:\C#_Concepts\MIcroservices_Sample\CustomerService\bin\Debug\net8.0\Microsoft.I
 C:\C#_Concepts\MIcroservices_Sample\CustomerService\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
 C:\C#_Concepts\MIcroservices_Sample\CustomerService\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
 C:\C#_Concepts\MIcroservices_Sample\CustomerService\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
+c:\C#_Concepts\MIcroservices_Sample\CustomerService\obj\Debug\net8.0\CustomerService.sourcelink.json

@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microservice;
 var builder = WebApplication.CreateBuilder(args);
 
 var key = Encoding.ASCII.GetBytes("DbFCH///fLPOk4Yaw8hvmFueG3y4yvb8KW+jZaLMDOI="); // This should be a secret key stored in a secure location
@@ -11,7 +12,7 @@ builder.Services.AddAuthentication(auth =>
     auth.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     auth.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(options =>
-{   
+{
     options.RequireHttpsMetadata = false;
     options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
@@ -20,8 +21,8 @@ builder.Services.AddAuthentication(auth =>
         IssuerSigningKey = new SymmetricSecurityKey(key),
         ValidateIssuer = true, // Enable issuer validation
         ValidateAudience = true, // Enable audience validation
-        ValidIssuer = "YourIssuer", // Specify the expected issuer
-       ValidAudiences = new[] { "customerservice", "customerhistory" } // Specify the expected audience
+        ValidIssuer = "http://localhost:5014/", // Specify the expected issuer
+        ValidAudiences = new[] { "customerservice", "customerhistory" } // Specify the expected audience
     };
 });
 
@@ -30,7 +31,14 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (connectionString != null)
+{
+    builder.Services.AddScoped(_ => new UserRepository(connectionString));
+    builder.Services.AddScoped<IUserService, UserService>();
+    builder.Services.AddScoped<ITokenService, TokenService>();
+    builder.Services.AddScoped<ITokenValidationService, TokenValidationService>();
+}
 
 var app = builder.Build();
 

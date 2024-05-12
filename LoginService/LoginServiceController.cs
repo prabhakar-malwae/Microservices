@@ -12,13 +12,11 @@ public class LoginServiceController : ControllerBase
 {
     private readonly IUserService _userService;
     private readonly ITokenService _tokenService;
-    private readonly ITokenValidationService _tokenValidationService;
 
-    public LoginServiceController(IUserService userService, ITokenService tokenService, ITokenValidationService tokenvalidationService)
+    public LoginServiceController(IUserService userService, ITokenService tokenService)
     {
         _userService = userService;
         _tokenService = tokenService;
-        _tokenValidationService = tokenvalidationService;
     }
 
     [HttpPost("login")]
@@ -33,12 +31,12 @@ public class LoginServiceController : ControllerBase
         return Ok(new { Token = token });
     }
     [HttpPost("validate-token")]
-    public IActionResult ValidateToken([FromBody] string token)
+    public IActionResult ValidateToken([FromBody] TokenRequest request)
     {
         // Add your token validation logic here
         // Example: check if token is valid or expired
 
-        if (string.IsNullOrEmpty(token))
+        if (string.IsNullOrEmpty(request.Token))
         {
             return BadRequest("Invalid token");
         }
@@ -46,7 +44,7 @@ public class LoginServiceController : ControllerBase
         try
         {
 
-            var claims_principal = _tokenService.ValidateToken(token);
+            var claims_principal = _tokenService.ValidateToken(request.Token);
             if (claims_principal.Identity.IsAuthenticated == false)
             {
                 return Unauthorized();
@@ -61,6 +59,10 @@ public class LoginServiceController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
+}
+public class TokenRequest
+{
+    public string? Token { get; set; }
 }
 
 

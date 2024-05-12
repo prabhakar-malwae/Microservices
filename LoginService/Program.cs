@@ -39,7 +39,6 @@ if (connectionString != null)
     builder.Services.AddScoped(_ => new UserRepository(connectionString));
     builder.Services.AddScoped<IUserService, UserService>();
     builder.Services.AddScoped<ITokenService, TokenService>();
-    builder.Services.AddScoped<ITokenValidationService, TokenValidationService>();
 }
 
 var app = builder.Build();

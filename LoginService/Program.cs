@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microservice;
+using System.Security.Cryptography;
 var builder = WebApplication.CreateBuilder(args);
 
-var key = Encoding.ASCII.GetBytes("DbFCH///fLPOk4Yaw8hvmFueG3y4yvb8KW+jZaLMDOI="); // This should be a secret key stored in a secure location
+var key = "DbFCH///fLPOk4Yaw8hvmFueG3y4yvb8KW+jZaLMDOI="; // This should be a secret key stored in a secure location
+var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(key));
 
 builder.Services.AddAuthentication(auth =>
 {
@@ -18,7 +20,7 @@ builder.Services.AddAuthentication(auth =>
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(key),
+        IssuerSigningKey = new SymmetricSecurityKey(hmac.Key),
         ValidateIssuer = true, // Enable issuer validation
         ValidateAudience = true, // Enable audience validation
         ValidIssuer = "http://localhost:5014/", // Specify the expected issuer

@@ -17,8 +17,8 @@ public class LoginServiceController : ControllerBase
     public LoginServiceController(IUserService userService, ITokenService tokenService, ITokenValidationService tokenvalidationService)
     {
         _userService = userService;
-        _tokenService = tokenService;   
-        _tokenValidationService=tokenvalidationService;    
+        _tokenService = tokenService;
+        _tokenValidationService = tokenvalidationService;
     }
 
     [HttpPost("login")]
@@ -43,15 +43,22 @@ public class LoginServiceController : ControllerBase
             return BadRequest("Invalid token");
         }
 
-        // Your token validation logic...
+        try
+        {
 
-        if (_tokenValidationService.ValidateToken(token))
-        {
-            return Ok();
+            var claims_principal = _tokenService.ValidateToken(token);
+            if (claims_principal.Identity.IsAuthenticated == false)
+            {
+                return Unauthorized();
+            }
+            else
+            {
+                return Ok(true);
+            }
         }
-        else
+        catch (Exception ex)
         {
-            return Unauthorized();
+            return BadRequest(ex.Message);
         }
     }
 }
@@ -66,6 +73,8 @@ public class LoginRequest
 public interface ITokenService
 {
     public Task<string> GenerateToken(LoginRequest request);
+    public ClaimsPrincipal ValidateToken(string token);
+
 }
 
 public interface IUserService
@@ -75,15 +84,15 @@ public interface IUserService
 
 public class UserService : IUserService
 {
-     private readonly UserRepository _userRepository;
+    private readonly UserRepository _userRepository;
 
-     public UserService(UserRepository userRepository)
-     {
-            _userRepository = userRepository;
-     }
+    public UserService(UserRepository userRepository)
+    {
+        _userRepository = userRepository;
+    }
     public Task<LoginRequest?> AuthenticateAsync(int Id, string? UserName)
     {
-        var result =_userRepository.GetCustomerById(Id);
+        var result = _userRepository.GetCustomerById(Id);
         if (result == null)
             return Task.FromResult<LoginRequest?>(null);
         return Task.FromResult<LoginRequest?>(new LoginRequest { Id = result.Id, UserName = result.Name });
@@ -92,43 +101,72 @@ public class UserService : IUserService
 
 public class TokenService : ITokenService
 {
+    private const string SecretKey = "DbFCH///fLPOk4Yaw8hvmFueG3y4yvb8KW+jZaLMDOI=";
+    private const string KeyId = "kid"; // Replace with your actual key ID
+    private const string Issuer = "http://localhost:5014";
+    private const string Audience = "customerservice";
+
     public Task<string> GenerateToken(LoginRequest request)
     {
-         
-        // Define your secret key (you should keep this secure)
-        string secretKey = "DbFCH///fLPOk4Yaw8hvmFueG3y4yvb8KW+jZaLMDOI=";
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretKey));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
+        {
+            CryptoProviderFactory = new CryptoProviderFactory { CacheSignatureProviders = false }
+        };
 
-        // Convert the secret key to bytes
-        var keyBytes = Encoding.UTF8.GetBytes(secretKey);
+        var header = new JwtHeader(credentials)
+        {
+            { "kid", KeyId }
+        };
 
-        // Create signing credentials using the secret key and HMAC-SHA256 algorithm
-        var signingCredentials = new SigningCredentials(new SymmetricSecurityKey(keyBytes), SecurityAlgorithms.HmacSha256);
-
-        // Create claims for the JWT token
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, request.UserName ?? string.Empty) // Fix: Pass the claim type and value as strings
-            // Add additional claims as needed
+            new Claim(ClaimTypes.NameIdentifier, request.Id.ToString()),
+            new Claim(ClaimTypes.Name, request.UserName ?? "")
         };
 
-        // Create a JWT security token descriptor
-        var tokenDescriptor = new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddHours(1), // Token expiration time
-            SigningCredentials = signingCredentials
-        };
+        var payload = new JwtPayload(Issuer, Audience, claims, null, DateTime.UtcNow.AddHours(1));
+        var token = new JwtSecurityToken(header, payload);
 
-        // Create a JWT security token handler
-        var tokenHandler = new JwtSecurityTokenHandler();
-
-        // Generate the JWT token
-        var token = tokenHandler.CreateJwtSecurityToken(tokenDescriptor);
-
-        // Encode the JWT token to its string representation
-        var encodedToken = tokenHandler.WriteToken(token);
-
-        return Task.FromResult(encodedToken);
-    
+        return Task.FromResult(new JwtSecurityTokenHandler().WriteToken(token));
     }
+
+    // Assume this method exists and retrieves the correct signing key for a given 'kid'
+    private SecurityKey GetSigningKey(string kid)
+    {
+        // Logic to retrieve the key from a secure location (e.g., database, key vault)
+        // For example, this could be a lookup in a dictionary, a database query, etc.
+        // This is a placeholder for demonstration purposes
+        var keyDictionary = new Dictionary<string, string>
+        {
+            { "kid", "DbFCH///fLPOk4Yaw8hvmFueG3y4yvb8KW+jZaLMDOI=" }
+        };
+
+        if (keyDictionary.TryGetValue(kid, out var key))
+        {
+            return new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+        }
+
+        throw new InvalidOperationException("Key ID not found.");
+    }
+
+    public ClaimsPrincipal ValidateToken(string token)
+    {
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("DbFCH///fLPOk4Yaw8hvmFueG3y4yvb8KW+jZaLMDOI="));
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var validationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = key,
+            ValidateIssuer = true,
+            ValidIssuer = "http://localhost:5014",
+            ValidateAudience = true,
+            ValidAudience = "customerservice",
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+
+        return tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
+    }
+
 }

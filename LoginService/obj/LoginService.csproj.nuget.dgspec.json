@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\C#_Concepts\\MIcroservices_Sample\\LoginService\\LoginService.csproj": {}
+    "c:\\C#_Concepts\\MIcroservices_Sample\\LoginService\\LoginService.csproj": {}
   },
   "projects": {
-    "C:\\C#_Concepts\\MIcroservices_Sample\\LoginService\\LoginService.csproj": {
+    "c:\\C#_Concepts\\MIcroservices_Sample\\LoginService\\LoginService.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\C#_Concepts\\MIcroservices_Sample\\LoginService\\LoginService.csproj",
+        "projectUniqueName": "c:\\C#_Concepts\\MIcroservices_Sample\\LoginService\\LoginService.csproj",
         "projectName": "LoginService",
-        "projectPath": "C:\\C#_Concepts\\MIcroservices_Sample\\LoginService\\LoginService.csproj",
+        "projectPath": "c:\\C#_Concepts\\MIcroservices_Sample\\LoginService\\LoginService.csproj",
         "packagesPath": "C:\\Users\\dhruv\\.nuget\\packages\\",
-        "outputPath": "C:\\C#_Concepts\\MIcroservices_Sample\\LoginService\\obj\\",
+        "outputPath": "c:\\C#_Concepts\\MIcroservices_Sample\\LoginService\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
